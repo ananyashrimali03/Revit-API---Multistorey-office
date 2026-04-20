@@ -1,3 +1,23 @@
-Revit API - Hands-on Office Data
+# Revit BIM Analytics Pipeline
 
-Created this dashboard to understand the workflow of scripting and automation in Revit and Dynamo environment using Revit API and Streamlit through the IDE. Created the dashboard to explore the data extracted.
+End-to-end data pipeline extracting building 
+information from Revit models using Dynamo 
+and the Revit API, processed in Python, 
+and visualized in a Streamlit dashboard.
+
+## Pipeline
+Revit Model → Dynamo + Revit API → 
+Python Processing → Streamlit Dashboard
+
+## What It Extracts
+- Room data — names, areas, levels, categories
+- Wall data — types, lengths, areas by level
+- Floor data — areas by level
+- Door and window counts by level
+- Wall material layers and thicknesses
+- Early-stage embodied carbon estimates (ICE V3.0)
+
+## Tools
+- Dynamo (Revit API / FilteredElementCollector)
+- Python (Pandas, Streamlit, Plotly)
+- ICE V3.0 carbon factors
