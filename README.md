@@ -1,6 +1,6 @@
 # Revit BIM Analytics Pipeline
 
-End-to-end data pipeline extracting building 
+Data pipeline extracting building 
 information from Revit models using Dynamo 
 and the Revit API, processed in Python, 
 and visualized in a Streamlit dashboard.
