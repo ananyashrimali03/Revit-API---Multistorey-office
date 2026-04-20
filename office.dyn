@@ -1,0 +1,249 @@
+{
+  "Uuid": "ba01863f-683e-4dae-b12d-5de9c9d0e4dc",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "office",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import clr\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitServices')\r\nfrom Autodesk.Revit.DB import *\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\nBASE_PATH = r\"C:\\Users\\anany\\OneDrive\\Desktop\\CMU\\S26\\Job Apps\\KUNZ\\kunz_demo\\office\\\\\"\r\n\r\nimport os\r\nos.makedirs(BASE_PATH, exist_ok=True)\r\n\r\n# ── ROOMS ────────────────────────────────────────────────\r\nroom_collector = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_Rooms)\\\r\n    .ToElements()\r\n\r\nroom_rows = []\r\nfor r in room_collector:\r\n    try:\r\n        if r.Area == 0:\r\n            continue\r\n        name = r.get_Parameter(\r\n            BuiltInParameter.ROOM_NAME\r\n        ).AsString()\r\n        number = r.get_Parameter(\r\n            BuiltInParameter.ROOM_NUMBER\r\n        ).AsString()\r\n        area = round(r.Area * 0.092903, 2)\r\n        perimeter = round(\r\n            r.get_Parameter(\r\n                BuiltInParameter.ROOM_PERIMETER\r\n            ).AsDouble() * 0.3048, 2\r\n        )\r\n        level = doc.GetElement(r.LevelId).Name\r\n        room_rows.append(\r\n            f\"{name},{number},{area},{perimeter},{level}\"\r\n        )\r\n    except:\r\n        continue\r\n\r\nwith open(BASE_PATH + \"rooms.csv\", 'w', encoding='utf-8') as f:\r\n    f.write(\"Name,Number,Area_m2,Perimeter_m,Level\\n\")\r\n    for row in room_rows:\r\n        f.write(row + \"\\n\")\r\n\r\n# ── WALLS ────────────────────────────────────────────────\r\nwall_collector = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_Walls)\\\r\n    .ToElements()\r\n\r\nwall_rows = []\r\nfor w in wall_collector:\r\n    try:\r\n        name = w.Name\r\n        length_param = w.get_Parameter(\r\n            BuiltInParameter.CURVE_ELEM_LENGTH\r\n        )\r\n        length = round(\r\n            length_param.AsDouble() * 0.3048, 2\r\n        ) if length_param else 0\r\n        \r\n        area_param = w.get_Parameter(\r\n            BuiltInParameter.HOST_AREA_COMPUTED\r\n        )\r\n        area = round(\r\n            area_param.AsDouble() * 0.092903, 2\r\n        ) if area_param else 0\r\n        \r\n        level = doc.GetElement(w.LevelId)\r\n        level_name = level.Name if level else \"Unknown\"\r\n        \r\n        wall_rows.append(\r\n            f\"{name},{length},{area},{level_name}\"\r\n        )\r\n    except:\r\n        continue\r\n\r\nwith open(BASE_PATH + \"walls.csv\", 'w', encoding='utf-8') as f:\r\n    f.write(\"Type,Length_m,Area_m2,Level\\n\")\r\n    for row in wall_rows:\r\n        f.write(row + \"\\n\")\r\n\r\n# ── FLOORS ───────────────────────────────────────────────\r\nfloor_collector = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_Floors)\\\r\n    .ToElements()\r\n\r\nfloor_rows = []\r\nfor fl in floor_collector:\r\n    try:\r\n        name = fl.Name\r\n        area_param = fl.get_Parameter(\r\n            BuiltInParameter.HOST_AREA_COMPUTED\r\n        )\r\n        area = round(\r\n            area_param.AsDouble() * 0.092903, 2\r\n        ) if area_param else 0\r\n        \r\n        level = doc.GetElement(fl.LevelId)\r\n        level_name = level.Name if level else \"Unknown\"\r\n        \r\n        floor_rows.append(f\"{name},{area},{level_name}\")\r\n    except:\r\n        continue\r\n\r\nwith open(BASE_PATH + \"floors.csv\", 'w', encoding='utf-8') as f:\r\n    f.write(\"Type,Area_m2,Level\\n\")\r\n    for row in floor_rows:\r\n        f.write(row + \"\\n\")\r\n\r\n# ── DOORS ────────────────────────────────────────────────\r\ndoor_collector = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_Doors)\\\r\n    .ToElements()\r\n\r\ndoor_rows = []\r\nfor d in door_collector:\r\n    try:\r\n        if d.GetType().Name == \"FamilySymbol\":\r\n            continue\r\n        name = d.Name\r\n        level = doc.GetElement(d.LevelId)\r\n        level_name = level.Name if level else \"Unknown\"\r\n        door_rows.append(f\"{name},{level_name}\")\r\n    except:\r\n        continue\r\n\r\nwith open(BASE_PATH + \"doors.csv\", 'w', encoding='utf-8') as f:\r\n    f.write(\"Type,Level\\n\")\r\n    for row in door_rows:\r\n        f.write(row + \"\\n\")\r\n\r\n# ── WINDOWS ──────────────────────────────────────────────\r\nwindow_collector = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_Windows)\\\r\n    .ToElements()\r\n\r\nwindow_rows = []\r\nfor w in window_collector:\r\n    try:\r\n        if w.GetType().Name == \"FamilySymbol\":\r\n            continue\r\n        name = w.Name\r\n        level = doc.GetElement(w.LevelId)\r\n        level_name = level.Name if level else \"Unknown\"\r\n        window_rows.append(f\"{name},{level_name}\")\r\n    except:\r\n        continue\r\n\r\nwith open(BASE_PATH + \"windows.csv\", 'w', encoding='utf-8') as f:\r\n    f.write(\"Type,Level\\n\")\r\n    for row in window_rows:\r\n        f.write(row + \"\\n\")\r\n\r\nOUT = [\r\n    f\"Rooms: {len(room_rows)}\",\r\n    f\"Walls: {len(wall_rows)}\",\r\n    f\"Floors: {len(floor_rows)}\",\r\n    f\"Doors: {len(door_rows)}\",\r\n    f\"Windows: {len(window_rows)}\"\r\n]",
+      "Engine": "PythonNet3",
+      "VariableInputPorts": true,
+      "Id": "f3e9845190b543b88fe0e0b66c7bc1b9",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "87959433d7e747e9a27f1909afbd7521",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "dcac18ceaf9240edbd88ae5530f47955",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 200.0,
+      "WatchHeight": 200.0,
+      "Id": "5e36b467f06d43c0b78011583334efea",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "a38a58020a974284b6dd31932740eeb4",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "07919c928cb9449b98d8e44dc2fead95",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import clr\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitServices')\r\nfrom Autodesk.Revit.DB import *\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\nBASE_PATH = r\"C:\\Users\\anany\\OneDrive\\Desktop\\CMU\\S26\\Job Apps\\KUNZ\\kunz_demo\\office\\\\\"\r\n\r\n# ── WALL MATERIAL EXTRACTION ─────────────────────────────\r\nwall_collector = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_Walls)\\\r\n    .ToElements()\r\n\r\nmaterial_rows = []\r\n\r\nfor wall in wall_collector:\r\n    try:\r\n        # Get wall area\r\n        area_param = wall.get_Parameter(\r\n            BuiltInParameter.HOST_AREA_COMPUTED\r\n        )\r\n        wall_area = area_param.AsDouble() * 0.092903 \\\r\n            if area_param else 0\r\n\r\n        if wall_area == 0:\r\n            continue\r\n\r\n        # Get level\r\n        level = doc.GetElement(wall.LevelId)\r\n        level_name = level.Name if level else \"Unknown\"\r\n\r\n        # Get wall type name\r\n        wall_type = doc.GetElement(wall.GetTypeId())\r\n        wall_type_name = wall_type.Name \\\r\n            if wall_type else \"Unknown\"\r\n\r\n        # Get compound structure layers\r\n        compound = wall_type.GetCompoundStructure()\r\n        if compound is None:\r\n            continue\r\n\r\n        layers = compound.GetLayers()\r\n        for layer in layers:\r\n            mat_id = layer.MaterialId\r\n            if mat_id == ElementId.InvalidElementId:\r\n                continue\r\n\r\n            mat = doc.GetElement(mat_id)\r\n            if not mat:\r\n                continue\r\n\r\n            # Layer thickness in meters\r\n            thickness = layer.Width * 0.3048\r\n\r\n            if thickness == 0:\r\n                continue\r\n\r\n            # Volume = wall area × layer thickness\r\n            volume = round(wall_area * thickness, 4)\r\n\r\n            material_rows.append(\r\n                f\"{mat.Name},{wall_type_name},\"\r\n                f\"{level_name},{round(wall_area,2)},\"\r\n                f\"{round(thickness,3)},{volume}\"\r\n            )\r\n\r\n    except:\r\n        continue\r\n\r\nwith open(\r\n    BASE_PATH + \"wall_materials.csv\", 'w', encoding='utf-8'\r\n) as f:\r\n    f.write(\r\n        \"Material,Wall_Type,Level,\"\r\n        \"Wall_Area_m2,Thickness_m,Volume_m3\\n\"\r\n    )\r\n    for row in material_rows:\r\n        f.write(row + \"\\n\")\r\n\r\nOUT = [\r\n    f\"Material rows extracted: {len(material_rows)}\",\r\n    \"Saved to wall_materials.csv\"\r\n]",
+      "Engine": "PythonNet3",
+      "VariableInputPorts": true,
+      "Id": "e437e527bfaf41cc86f35f9946b65f48",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "1f8a930900d04cfeb53b916cdd15cacf",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "1734a0f9cf824d5b9e61b19bdadff4ab",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 200.0,
+      "WatchHeight": 200.0,
+      "Id": "3200060fefdf476abaf9461477d662ab",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "7b4fb11b7bac4f27b73c1b10e79c51c0",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "b72e7566912a4ac4bd97ae3c8b56c986",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "dcac18ceaf9240edbd88ae5530f47955",
+      "End": "a38a58020a974284b6dd31932740eeb4",
+      "Id": "2f72c8e552694b388eeac9e50b0544e5",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "1734a0f9cf824d5b9e61b19bdadff4ab",
+      "End": "7b4fb11b7bac4f27b73c1b10e79c51c0",
+      "Id": "ddbc8afaf51348d1b58d5f5aac930298",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": false,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "4.0",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "10.3",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "4.0.2.3852",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "f3e9845190b543b88fe0e0b66c7bc1b9",
+        "Name": "Spatial Data Extraction",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 22.64550159124576,
+        "Y": 152.73304502056936
+      },
+      {
+        "Id": "5e36b467f06d43c0b78011583334efea",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 324.3862460218855,
+        "Y": 152.24434834018987
+      },
+      {
+        "Id": "e437e527bfaf41cc86f35f9946b65f48",
+        "Name": "Material Info Extraction",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 26.120241015305112,
+        "Y": 499.9187144169265
+      },
+      {
+        "Id": "3200060fefdf476abaf9461477d662ab",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 335.01303276919447,
+        "Y": 500.40542352516803
+      }
+    ],
+    "Annotations": [],
+    "X": 38.65093833197193,
+    "Y": -25.327294286230767,
+    "Zoom": 0.5940848438975357
+  }
+}
