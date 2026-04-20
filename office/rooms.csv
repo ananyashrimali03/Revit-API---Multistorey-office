@@ -1,0 +1,20 @@
+Name,Number,Area_m2,Perimeter_m,Level
+President Office,1,29.92,21.9,Level 1
+Meeting Room,2,59.42,31.21,Level 1
+HR Office,3,30.53,22.11,Level 1
+Breakroom,4,30.53,22.11,Level 1
+IT Office,5,36.89,24.34,Level 1
+Office 1,6,44.07,27.18,Level 1
+Room,7,0.69,3.36,Level 1
+A/V Room,8,39.48,25.23,Level 1
+Office 2,9,39.93,25.63,Level 1
+Cafe,10,132.36,46.7,Level 1
+Hallway,11,88.99,82.2,Level 1
+Room,12,0.69,3.36,Level 2
+Room,13,0.69,3.36,Level 3
+Room,14,0.69,3.36,Level 4
+Room,15,0.69,3.36,Level 5
+Stairway,16,12.17,15.74,Level 1
+Men's Room,17,9.54,16.53,Level 1
+Ladies' Room,18,8.25,14.47,Level 1
+Hall,19,11.37,15.46,Level 1
